@@ -1,0 +1,13 @@
+[package]
+name = "rmenu"
+version = "0.1.0"
+authors = ["Micxjo Funkcio <micxjo@fastmail.com>"]
+license = "MIT"
+description = "A launcher menu for Linux"
+homepage = "https://github.com/micxjo/rmenu"
+repository = "https://github.com/micxjo/rmenu"
+readme = "README.md"
+
+[dependencies]
+xdg = "^2.0"
+nom = "^1.2.4"
