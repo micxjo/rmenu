@@ -95,10 +95,58 @@ fn dmenu_desktop_entries() -> Result<(), Error> {
     Ok(())
 }
 
+extern crate gtk;
+use gtk::prelude::*;
+
+fn gtk_path_entries() {
+    gtk::init().expect("failed to initialize GTK");
+
+    let window = gtk::Window::new(gtk::WindowType::Toplevel);
+    window.set_title("rmenu");
+    window.set_default_size(350, 140);
+    window.set_modal(true);
+
+    window.connect_delete_event(|_, _| {
+        gtk::main_quit();
+        Inhibit(false)
+    });
+
+    let list_store = gtk::ListStore::new(&[gtk::Type::String]);
+    let tree_view = gtk::TreeView::new_with_model(&list_store);
+
+    let column = gtk::TreeViewColumn::new();
+    let cell = gtk::CellRendererText::new();
+    column.pack_start(&cell, true);
+    column.add_attribute(&cell, "text", 0);
+    tree_view.append_column(&column);
+
+    let path_entries = find_path_entries().unwrap();
+    for exe in path_entries.clone().keys() {
+        let iter = list_store.append();
+        list_store.set(&iter, &[0], &[exe]);
+    }
+
+    tree_view.connect_row_activated(move |_, tree_path, _| {
+        let index = tree_path.get_indices()[0];
+        let exe = path_entries.keys().nth(index as usize).unwrap();
+        let exe_path = path_entries.get(exe).unwrap();
+        Command::new(exe_path).spawn().unwrap();
+        gtk::main_quit();
+    });
+
+    let scrolled = gtk::ScrolledWindow::new(None, None);
+    scrolled.add(&tree_view);
+
+    window.add(&scrolled);
+    window.show_all();
+
+    gtk::main();
+}
+
 fn main() {
-    if env::args().nth(1) == Some("run".to_owned()) {
-        dmenu_path_entries().ok();
-    } else {
-        dmenu_desktop_entries().ok();
+    match env::args().nth(1).as_ref().map(String::as_ref) {
+        Some("de") => dmenu_desktop_entries().unwrap(),
+        Some("dp") => dmenu_path_entries().unwrap(),
+        _ => gtk_path_entries(),
     }
 }
